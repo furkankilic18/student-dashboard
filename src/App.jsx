@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './styles/lab-styles.css';
+import StudentList from './components/StudentList';
+import StudentForm from './components/StudentForm';
+import StudentControls from './components/StudentControls';
+
+const initialStudents = [
+  { id: 1, name: 'Ali', grade: 85 },
+  { id: 2, name: 'Siti', grade: 72 },
+  { id: 3, name: 'Rahim', grade: 55 },
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [students, setStudents] = useState(initialStudents);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState(true); // true = High to Low
+
+  const addStudent = (newS) => setStudents(prev => [...prev, newS]);
+  const deleteStudent = (id) => setStudents(prev => prev.filter(s => s.id !== id));
+
+  // Derived Data: Filtreleme ve Sıralama Zinciri
+  const visibleStudents = students
+    .filter(s => {
+      if (filter === 'pass') return s.grade >= 60;
+      if (filter === 'fail') return s.grade < 60;
+      return true;
+    })
+    .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => sortOrder ? b.grade - a.grade : a.grade - b.grade);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
+    <div className="app">
+      <h1 className="header">Student Dashboard</h1>
+      
+      <StudentForm onAdd={addStudent} students={students} />
+      
+      <StudentControls 
+        filter={filter} 
+        setFilter={setFilter} 
+        searchTerm={searchTerm} 
+        setSearchTerm={setSearchTerm} 
+        sortOrder={sortOrder} 
+        setSortOrder={setSortOrder} 
+      />
+
+      {visibleStudents.length === 0 && searchTerm ? (
+        <p className="no-data">
+          "<em>{searchTerm}</em>" ile eşleşen öğrenci yok
         </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      ) : (
+        <StudentList 
+          students={visibleStudents} 
+          onDelete={deleteStudent} 
+        />
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
